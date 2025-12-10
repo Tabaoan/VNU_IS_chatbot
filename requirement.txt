@@ -1,0 +1,22 @@
+python-dotenv==1.1.1
+chromadb==1.1.0
+langchain==0.3.27
+langchain-core==0.3.78
+langchain-openai==0.3.33
+langchain-community==0.3.29
+langchain-chroma==0.2.6
+pypdf==5.1.0
+Flask==3.1.2
+flask-cors == 6.0.1
+fastapi == 0.118.0
+langchain-pinecone == 0.2.12
+pinecone == 7.3.0
+gspread == 6.2.1
+uvicorn == 0.37.0
+starlette == 0.48.0
+pydantic == 2.11.9
+google-auth == 2.40.3
+psycopg2-binary == 2.9.11
+pandas == 2.3.2
+openpyxl == 3.1.5
+langdetect == 1.0.9
