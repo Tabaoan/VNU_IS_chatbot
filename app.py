@@ -8,16 +8,29 @@ from vnuis_chatbot import chatbot, get_vectordb_stats, store
 
 BASE_DIR = Path(__file__).resolve().parent
 
-app = Flask(__name__, static_folder=str(BASE_DIR))
+# -------------------------------
+# CẤU HÌNH STATIC ĐÚNG CHUẨN RENDER
+# -------------------------------
+app = Flask(
+    __name__,
+    static_folder=str(BASE_DIR),      # Cho phép phục vụ file tĩnh trong thư mục hiện tại
+    static_url_path=''                # Để URL /abc.png hoạt động
+)
+
 CORS(app)
+
+# ============================================
+# ROUTE HIỂN THỊ GIAO DIỆN
+# ============================================
 @app.route('/')
 def index():
-    """Serve chatbot.html trên local"""
     return send_from_directory(BASE_DIR, 'chatbot.html')
 
+# ============================================
+# API CHAT
+# ============================================
 @app.route('/api/chat', methods=['POST'])
 def chat():
-    """API endpoint để chat"""
     try:
         data = request.json
         message = data.get('message', '')
@@ -26,37 +39,32 @@ def chat():
         if not message:
             return jsonify({'error': 'Message is required'}), 400
 
-        # Gọi chatbot
         response = chatbot.invoke(
             {"message": message},
             config={"configurable": {"session_id": session_id}}
         )
 
-        return jsonify({
-            'success': True,
-            'response': response
-        })
+        return jsonify({'success': True, 'response': response})
 
     except Exception as e:
-        return jsonify({
-            'success': False,
-            'error': str(e)
-        }), 500
+        return jsonify({'success': False, 'error': str(e)}), 500
 
-
+# ============================================
+# API STATUS
+# ============================================
 @app.route('/api/status', methods=['GET'])
 def status():
-    """Trạng thái VectorDB"""
     try:
         stats = get_vectordb_stats()
         return jsonify({'success': True, 'stats': stats})
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
 
-
+# ============================================
+# API CLEAR HISTORY
+# ============================================
 @app.route('/api/clear', methods=['POST'])
 def clear_history():
-    """Xóa lịch sử hội thoại"""
     try:
         data = request.json
         session_id = data.get('session_id', 'web_session')
@@ -69,11 +77,10 @@ def clear_history():
         return jsonify({'success': False, 'error': str(e)}), 500
 
 
-# ===========================
-# CHẠY LOCALHOST
-# ===========================
+# ============================================
+# CHẠY LOCAL + RENDER
+# ============================================
 if __name__ == '__main__':
-    # Nếu đang chạy trên Render → Render sẽ set biến môi trường PORT
     port = int(os.environ.get("PORT", 5000))
 
     print("\n" + "="*60)
