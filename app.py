@@ -73,11 +73,13 @@ def clear_history():
 # CHẠY LOCALHOST
 # ===========================
 if __name__ == '__main__':
+    # Nếu đang chạy trên Render → Render sẽ set biến môi trường PORT
+    port = int(os.environ.get("PORT", 5000))
+
     print("\n" + "="*60)
-    print("FLASK SERVER ĐANG KHỞI ĐỘNG")
+    print(f"FLASK SERVER ĐANG KHỞI ĐỘNG TRÊN CỔNG {port}")
     print("="*60)
-    print(" Mở trình duyệt tại: http://127.0.0.1:5000")
+    print(f" Mở trình duyệt tại: http://127.0.0.1:{port}")
     print("="*60 + "\n")
 
-    # host=127.0.0.1 để chạy local, không public ra LAN
-    app.run(host='127.0.0.1', port=5000, debug=True)
+    app.run(host='0.0.0.0', port=port, debug=True)
