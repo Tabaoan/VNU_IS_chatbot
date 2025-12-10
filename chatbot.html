@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chatbot Tài Liệu AI</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1000px;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            height: 85vh;
+            max-height: 800px;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .header-logo img {
+        height: 45px;        
+        width: auto;         
+        border-radius: 8px;  
+        }
+
+        .header-icon {
+            font-size: 32px;
+        }
+
+        .header-title h1 {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .header-title p {
+            font-size: 13px;
+            opacity: 0.9;
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 13px;
+        }
+
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            background: #4ade80;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        .status-dot.offline {
+            background: #ef4444;
+            animation: none;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .toolbar {
+            background: #f8fafc;
+            padding: 15px 30px;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            gap: 10px;
+        }
+
+        .toolbar-btn {
+            padding: 8px 16px;
+            border: none;
+            background: white;
+            color: #64748b;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s;
+            border: 1px solid #e2e8f0;
+        }
+
+        .toolbar-btn:hover {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .chat-area {
+            flex: 1;
+            overflow-y: auto;
+            padding: 30px;
+            background: #f8fafc;
+        }
+
+        .message {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 25px;
+            animation: fadeIn 0.4s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .message-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            flex-shrink: 0;
+        }
+
+        .user-message .message-avatar {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .bot-message .message-avatar {
+            background: linear-gradient(135deg, #4ade80 0%, #22c55e 100%);
+            color: white;
+        }
+
+        .message-content {
+            flex: 1;
+        }
+
+        .message-bubble {
+            padding: 15px 20px;
+            border-radius: 15px;
+            max-width: 100%;
+            word-wrap: break-word;
+            line-height: 1.6;
+        }
+
+        .user-message .message-bubble {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-bottom-right-radius: 5px;
+        }
+
+        .bot-message .message-bubble {
+            background: white;
+            color: #1e293b;
+            border: 1px solid #e2e8f0;
+            border-bottom-left-radius: 5px;
+        }
+
+        .message-time {
+            font-size: 11px;
+            color: #94a3b8;
+            margin-top: 5px;
+        }
+
+        .typing-indicator {
+            display: none;
+            padding: 15px 20px;
+            background: white;
+            border-radius: 15px;
+            border-bottom-left-radius: 5px;
+            width: fit-content;
+            border: 1px solid #e2e8f0;
+        }
+
+        .typing-indicator.active {
+            display: block;
+        }
+
+        .typing-dots {
+            display: flex;
+            gap: 5px;
+        }
+
+        .typing-dots span {
+            width: 8px;
+            height: 8px;
+            background: #94a3b8;
+            border-radius: 50%;
+            animation: typing 1.4s infinite;
+        }
+
+        .typing-dots span:nth-child(2) { animation-delay: 0.2s; }
+        .typing-dots span:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes typing {
+            0%, 60%, 100% { transform: translateY(0); }
+            30% { transform: translateY(-10px); }
+        }
+
+        .input-area {
+            padding: 20px 30px;
+            background: white;
+            border-top: 1px solid #e2e8f0;
+        }
+
+        .input-container {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        #messageInput {
+            flex: 1;
+            padding: 15px 20px;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            font-size: 15px;
+            outline: none;
+            transition: all 0.3s;
+        }
+
+        #messageInput:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        #sendBtn {
+            padding: 15px 25px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        #sendBtn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        #sendBtn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #64748b;
+        }
+
+        .empty-state i {
+            font-size: 64px;
+            margin-bottom: 20px;
+            opacity: 0.3;
+        }
+
+        .empty-state h3 {
+            font-size: 20px;
+            margin-bottom: 10px;
+            color: #334155;
+        }
+
+        .empty-state p {
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .suggestions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 20px;
+            justify-content: center;
+        }
+
+        .suggestion-chip {
+            padding: 10px 18px;
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.3s;
+        }
+
+        .suggestion-chip:hover {
+            background: #265dde;
+            color: white;
+            border-color: #667eea;
+            transform: translateY(-2px);
+        }
+
+        .error-message {
+            background: #fee2e2;
+            color: #991b1b;
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin: 10px 30px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                height: 100vh;
+                max-height: none;
+                border-radius: 0;
+            }
+
+            .header {
+                padding: 20px;
+            }
+
+            .header-title h1 {
+                font-size: 20px;
+            }
+
+            .chat-area {
+                padding: 20px;
+            }
+
+            .input-area {
+                padding: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="header-left">
+                <div class="header-logo">
+                    <img src="VNU_IS_logo_(2).png" alt="Logo" />
+                </div>
+                <div class="header-title">
+                    <h1>VNU-IS</h1>
+                    <p>Tìm kiếm thông tin trong tài liệu với AI</p>
+                </div>
+            </div>
+            <div class="status-indicator">
+                <div class="status-dot" id="statusDot"></div>
+                <span id="docCount">Đang kết nối...</span>
+            </div>
+        </div>
+
+        <div class="toolbar">
+            <button class="toolbar-btn" onclick="clearChat()">
+                <i class="fas fa-broom"></i> Xóa lịch sử
+            </button>
+            <button class="toolbar-btn" onclick="showStatus()">
+                <i class="fas fa-info-circle"></i> Trạng thái
+            </button>
+            <button class="toolbar-btn" onclick="showHelp()">
+                <i class="fas fa-question-circle"></i> Trợ giúp
+            </button>
+        </div>
+
+        <div class="chat-area" id="chatArea">
+            <div class="empty-state">
+                <i class="fas fa-comments"></i>
+                <h3>Bắt đầu cuộc trò chuyện</h3>
+                <p>Hỏi tôi bất kỳ điều gì về tài liệu của bạn</p>
+                <div class="suggestions">
+                    <div class="suggestion-chip" onclick="sendMessage('Tài liệu có nói về gì?')">
+                        Tài liệu có nói về gì?
+                    </div>
+                    <div class="suggestion-chip" onclick="sendMessage('Tóm tắt nội dung chính')">
+                        Tóm tắt nội dung chính
+                    </div>
+                    <div class="suggestion-chip" onclick="sendMessage('Tìm thông tin về...')">
+                        Tìm thông tin về...
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="input-area">
+            <div class="input-container">
+                <input 
+                    type="text" 
+                    id="messageInput" 
+                    placeholder="Nhập câu hỏi của bạn..."
+                    onkeypress="handleKeyPress(event)"
+                >
+                <button id="sendBtn" onclick="handleSend()">
+                    <i class="fas fa-paper-plane"></i>
+                    Gửi
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE_URL = 'http://localhost:5000/api';
+        const SESSION_ID = 'web_session_' + Date.now();
+        let isProcessing = false;
+
+        // Kiểm tra kết nối khi load trang
+        window.addEventListener('load', () => {
+            checkConnection();
+        });
+
+        async function checkConnection() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/status`);
+                const data = await response.json();
+                
+                if (data.success && data.stats.exists) {
+                    document.getElementById('statusDot').classList.remove('offline');
+                    document.getElementById('docCount').textContent = 
+                        `${data.stats.total_documents} tài liệu`;
+                } else {
+                    showOfflineStatus();
+                }
+            } catch (error) {
+                showOfflineStatus();
+            }
+        }
+
+        function showOfflineStatus() {
+            document.getElementById('statusDot').classList.add('offline');
+            document.getElementById('docCount').textContent = 'Offline';
+        }
+
+        function addMessage(text, isUser) {
+            const chatArea = document.getElementById('chatArea');
+            const emptyState = chatArea.querySelector('.empty-state');
+            if (emptyState) {
+                emptyState.remove();
+            }
+
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${isUser ? 'user-message' : 'bot-message'}`;
+            
+            const now = new Date();
+            const time = now.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+            
+            messageDiv.innerHTML = `
+                <div class="message-avatar">
+                    <i class="fas fa-${isUser ? 'user' : 'robot'}"></i>
+                </div>
+                <div class="message-content">
+                    <div class="message-bubble">${escapeHtml(text)}</div>
+                    <div class="message-time">${time}</div>
+                </div>
+            `;
+            
+            chatArea.appendChild(messageDiv);
+            chatArea.scrollTop = chatArea.scrollHeight;
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML.replace(/\n/g, '<br>');
+        }
+
+        function showTypingIndicator() {
+            const chatArea = document.getElementById('chatArea');
+            const typingDiv = document.createElement('div');
+            typingDiv.className = 'message bot-message';
+            typingDiv.id = 'typingIndicator';
+            typingDiv.innerHTML = `
+                <div class="message-avatar">
+                    <i class="fas fa-robot"></i>
+                </div>
+                <div class="message-content">
+                    <div class="typing-indicator active">
+                        <div class="typing-dots">
+                            <span></span>
+                            <span></span>
+                            <span></span>
+                        </div>
+                    </div>
+                </div>
+            `;
+            chatArea.appendChild(typingDiv);
+            chatArea.scrollTop = chatArea.scrollHeight;
+        }
+
+        function hideTypingIndicator() {
+            const indicator = document.getElementById('typingIndicator');
+            if (indicator) {
+                indicator.remove();
+            }
+        }
+
+        function showError(message) {
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'error-message';
+            errorDiv.innerHTML = `
+                <i class="fas fa-exclamation-circle"></i>
+                <span>${message}</span>
+            `;
+            
+            const chatArea = document.getElementById('chatArea');
+            chatArea.appendChild(errorDiv);
+            
+            setTimeout(() => errorDiv.remove(), 5000);
+        }
+
+        async function sendMessage(text) {
+            if (!text) text = document.getElementById('messageInput').value.trim();
+            if (!text || isProcessing) return;
+
+            isProcessing = true;
+            const sendBtn = document.getElementById('sendBtn');
+            const messageInput = document.getElementById('messageInput');
+            
+            sendBtn.disabled = true;
+            messageInput.value = '';
+
+            addMessage(text, true);
+            showTypingIndicator();
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/chat`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        message: text,
+                        session_id: SESSION_ID
+                    })
+                });
+
+                const data = await response.json();
+                
+                hideTypingIndicator();
+
+                if (data.success) {
+                    addMessage(data.response, false);
+                } else {
+                    showError(data.error || 'Có lỗi xảy ra');
+                }
+            } catch (error) {
+                hideTypingIndicator();
+                showError('Không thể kết nối đến server. Hãy chắc chắn Flask server đang chạy.');
+                console.error('Error:', error);
+            } finally {
+                isProcessing = false;
+                sendBtn.disabled = false;
+                messageInput.focus();
+            }
+        }
+
+        function handleSend() {
+            sendMessage();
+        }
+
+        function handleKeyPress(event) {
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault();
+                handleSend();
+            }
+        }
+
+        async function clearChat() {
+            if (!confirm('Bạn có chắc muốn xóa lịch sử trò chuyện?')) return;
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/clear`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        session_id: SESSION_ID
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (data.success) {
+                    const chatArea = document.getElementById('chatArea');
+                    chatArea.innerHTML = `
+                        <div class="empty-state">
+                            <i class="fas fa-comments"></i>
+                            <h3>Lịch sử đã được xóa</h3>
+                            <p>Bắt đầu cuộc trò chuyện mới</p>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                showError('Không thể xóa lịch sử');
+            }
+        }
+
+        async function showStatus() {
+            addMessage('Kiểm tra trạng thái hệ thống', true);
+            showTypingIndicator();
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/status`);
+                const data = await response.json();
+                
+                hideTypingIndicator();
+
+                if (data.success && data.stats.exists) {
+                    const statusMsg = `📊 Trạng thái hệ thống:
+
+✅ Pinecone Index: ${data.stats.name}
+📚 Tổng documents: ${data.stats.total_documents}
+🔢 Dimension: ${data.stats.dimension}
+⚡ Trạng thái: Sẵn sàng`;
+                    
+                    addMessage(statusMsg, false);
+                } else {
+                    addMessage('❌ Hệ thống chưa sẵn sàng hoặc không có dữ liệu', false);
+                }
+            } catch (error) {
+                hideTypingIndicator();
+                showError('Không thể lấy trạng thái hệ thống');
+            }
+        }
+
+        function showHelp() {
+            const helpMsg = `📚 Hướng dẫn sử dụng:
+
+• Nhập câu hỏi về tài liệu của bạn
+• Bot sẽ tìm kiếm và trả lời dựa trên nội dung
+• Sử dụng nút "Xóa lịch sử" để bắt đầu lại
+• Nhấn "Trạng thái" để kiểm tra hệ thống
+
+Lưu ý: Bot chỉ trả lời dựa trên tài liệu đã tải lên`;
+            
+            addMessage(helpMsg, false);
+        }
+    </script>
+</body>
+</html>
