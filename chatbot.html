@@ -283,6 +283,37 @@
             opacity: 0.6;
             cursor: not-allowed;
         }
+        /* Thêm micro */
+        #micBtn {
+            padding: 15px 18px;
+            background: white;
+            color: #64748b;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #micBtn:hover:not(:disabled) {
+            border-color: #667eea;
+            color: #667eea;
+            transform: translateY(-2px);
+        }
+
+        #micBtn.listening {
+            background: #ef4444;
+            border-color: #ef4444;
+            color: white;
+        }
+
+        #micBtn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
 
         .empty-state {
             text-align: center;
@@ -425,10 +456,16 @@
                     placeholder="Nhập câu hỏi của bạn..."
                     onkeypress="handleKeyPress(event)"
                 >
+                <button id="micBtn" onclick="toggleMic()" title="Nhấn để nói">
+                    <i class="fas fa-microphone"></i>
+                </button>
+
                 <button id="sendBtn" onclick="handleSend()">
                     <i class="fas fa-paper-plane"></i>
                     Gửi
                 </button>
+
+                
             </div>
         </div>
     </div>
@@ -438,6 +475,87 @@
         const SESSION_ID = 'web_session_' + Date.now();
         let isProcessing = false;
 
+
+        // Thêm micro
+
+        let recognition = null;
+        let isListening = false;
+
+        function initSpeechRecognition() {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (!SpeechRecognition) return false;
+
+            recognition = new SpeechRecognition();
+            recognition.lang = "vi-VN";
+            recognition.continuous = false;
+            recognition.interimResults = false;
+
+            recognition.onstart = () => {
+                isListening = true;
+                const micBtn = document.getElementById("micBtn");
+                micBtn.classList.add("listening");
+                micBtn.innerHTML = `<i class="fas fa-stop"></i>`;
+            };
+
+            recognition.onend = () => {
+                isListening = false;
+                const micBtn = document.getElementById("micBtn");
+                micBtn.classList.remove("listening");
+                micBtn.innerHTML = `<i class="fas fa-microphone"></i>`;
+            };
+
+            recognition.onerror = (e) => {
+                // Các lỗi hay gặp: not-allowed (chưa cấp quyền), no-speech
+                console.error("Speech error:", e);
+                if (e.error === "not-allowed" || e.error === "service-not-allowed") {
+                    showError("Bạn chưa cấp quyền micro cho website.");
+                } else if (e.error === "no-speech") {
+                    showError("Không nghe thấy giọng nói. Thử lại nhé.");
+                } else {
+                    showError("Lỗi nhận diện giọng nói: " + e.error);
+                }
+            };
+
+            recognition.onresult = (event) => {
+                const transcript = event.results[0][0].transcript;
+                // Hiển thị vào ô input cho user thấy (tuỳ thích)
+                document.getElementById("messageInput").value = transcript;
+
+                // Tự gửi luôn
+                sendMessage(transcript);
+            };
+
+            return true;
+        }
+
+        // Bật/tắt mic
+        function toggleMic() {
+            if (isProcessing) return;
+
+            if (!recognition) {
+                const ok = initSpeechRecognition();
+                if (!ok) {
+                    showError("Trình duyệt của bạn không hỗ trợ Speech Recognition. Hãy dùng Chrome/Edge.");
+                    return;
+                }
+            }
+
+            if (isListening) {
+                recognition.stop();
+            } else {
+                recognition.start();
+            }
+        }
+
+        // Khởi tạo mic khi load trang (và disable nếu không hỗ trợ)
+        window.addEventListener("load", () => {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            const micBtn = document.getElementById("micBtn");
+            if (!SpeechRecognition && micBtn) {
+                micBtn.disabled = true;
+                micBtn.title = "Trình duyệt không hỗ trợ micro speech-to-text";
+            }
+        });
         // Kiểm tra kết nối khi load trang
         window.addEventListener('load', () => {
             checkConnection();

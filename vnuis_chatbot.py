@@ -176,11 +176,11 @@ def load_vectordb():
 
         vectordb = Pinecone(index=index, embedding=emb, text_key="text")
         retriever = vectordb.as_retriever(search_kwargs={"k": 15})
-        print(f"✅ VectorDB loaded: {PINECONE_INDEX_NAME} với {stats.get('total_vector_count', 0)} vectors")
+        print(f" VectorDB loaded: {PINECONE_INDEX_NAME} với {stats.get('total_vector_count', 0)} vectors")
         return vectordb
 
     except Exception as e:
-        print(f"❌ Lỗi load vectordb: {e}")
+        print(f" Lỗi load vectordb: {e}")
         return None
 
 
